@@ -20,5 +20,5 @@ fn main() -> std::io::Result<()> {
 
     stdout.reset()?;
 
-    write!(stdout, "❯ ")
+    write!(stdout, "> ")
 }
