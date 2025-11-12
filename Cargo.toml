@@ -1,0 +1,10 @@
+[package]
+name = "caprompt"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+dirs = "6.0.0"
+dunce = "1.0.5"
+gix = "0.74.1"
+termcolor = "1.4.1"
