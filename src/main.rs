@@ -9,6 +9,8 @@ fn main() -> std::io::Result<()> {
     let mut stdout = StandardStream::stdout(ColorChoice::Always);
     let mut color = ColorSpec::new();
 
+    writeln!(stdout, "")?;
+
     stdout.set_color(color.set_fg(Some(Color::Yellow)))?;
     path::write(&mut stdout)?;
 
