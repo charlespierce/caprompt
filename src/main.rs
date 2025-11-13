@@ -1,24 +1,40 @@
-use std::io::Write;
-use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
+use std::fmt::Write;
 
+mod color;
+mod context;
 mod git;
 mod path;
 mod status;
 
-fn main() -> std::io::Result<()> {
-    let mut stdout = StandardStream::stdout(ColorChoice::Always);
-    let mut color = ColorSpec::new();
+use color::Color;
+use context::Context;
 
-    stdout.set_color(color.set_fg(Some(Color::Yellow)))?;
-    path::write(&mut stdout)?;
+fn main() {
+    let Some(context) = Context::from_env() else {
+        return;
+    };
+    let mut output = String::with_capacity(128);
 
-    stdout.set_color(color.set_fg(Some(Color::Cyan)))?;
-    git::write(&mut stdout)?;
+    output.push_str("\n");
 
-    stdout.set_color(color.set_fg(Some(Color::Red)))?;
-    status::write(&mut stdout)?;
+    // Path info
+    output.push_str(Color::Yellow.as_str());
+    output.push_str(&path::generate(&context));
 
-    stdout.reset()?;
+    // Git Info
+    if let Some(git_state) = git::generate(&context) {
+        let _ = write!(output, " {}{}", Color::Cyan.as_str(), git_state);
+    }
 
-    write!(stdout, "> ")
+    // Error Info
+    if let Some(error) = status::generate(&context) {
+        output.push_str(" ");
+        output.push_str(Color::Red.as_str());
+        output.push_str(&error);
+    }
+
+    output.push_str(Color::Reset.as_str());
+    output.push_str(" \u{276F} ");
+
+    print!("{output}");
 }

@@ -1,21 +1,17 @@
+use crate::context::Context;
 use dunce::canonicalize;
 use std::{
     env,
-    io::{self, Write},
+    fmt::Write,
     path::{MAIN_SEPARATOR, PathBuf},
 };
-use termcolor::StandardStream;
 
-pub fn write(stdout: &mut StandardStream) -> io::Result<()> {
-    let current = match env::current_dir() {
-        Ok(cwd) => canonicalize(&cwd).unwrap_or(cwd),
-        Err(_) => return Ok(()),
-    };
+pub fn generate(context: &Context) -> String {
+    let current =
+        canonicalize(&context.current_dir).unwrap_or_else(|_| context.current_dir.clone());
 
     let short = strip_home_dir(current);
-    let normalized = normalize_separators(short);
-
-    write!(stdout, "{} ", normalized)
+    normalize_separators(short)
 }
 
 fn strip_home_dir(current: PathBuf) -> String {
@@ -29,7 +25,10 @@ fn strip_home_dir(current: PathBuf) -> String {
                 return "~".to_string();
             }
 
-            return format!("~{}{}", MAIN_SEPARATOR, suffix.display());
+            let mut output = String::with_capacity(suffix.as_os_str().len() + 2);
+            let _ = write!(&mut output, "~{}{}", MAIN_SEPARATOR, suffix.display());
+
+            return output;
         }
     }
 
@@ -38,7 +37,7 @@ fn strip_home_dir(current: PathBuf) -> String {
 
 #[cfg(windows)]
 fn normalize_separators(path: String) -> String {
-    // Heuristic: Only in emulated shells is the "SHELL" environment variable actually set. If it
+    // Heuristic: Only in unix-like shells is the "SHELL" environment variable actually set. If it
     // is, then we want to swap the path separator to a forward slash
     if env::var("SHELL").is_ok() {
         path.replace("\\", "/")
